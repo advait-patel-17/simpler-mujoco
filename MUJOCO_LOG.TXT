@@ -1,0 +1,33 @@
+Sat Feb  8 19:53:55 2025
+WARNING: Nan, Inf or huge value in QVEL at DOF 0. The simulation is unstable. Time = 0.2000.
+
+Sat Feb  8 19:53:55 2025
+WARNING: Nan, Inf or huge value in QACC at DOF 4. The simulation is unstable. Time = 0.3000.
+
+Sat Feb  8 19:54:17 2025
+WARNING: Nan, Inf or huge value in QVEL at DOF 0. The simulation is unstable. Time = 0.2000.
+
+Sat Feb  8 19:54:18 2025
+WARNING: Nan, Inf or huge value in QACC at DOF 4. The simulation is unstable. Time = 0.3000.
+
+Mon Feb 10 02:32:17 2025
+ERROR: could not create window
+
+Mon Feb 10 02:36:33 2025
+ERROR: could not create window
+
+Mon Feb 10 02:40:05 2025
+ERROR: could not create window
+
+Mon Feb 10 02:41:42 2025
+ERROR: could not create window
+
+Mon Feb 10 02:50:56 2025
+ERROR: could not create window
+
+Mon Feb 10 02:55:23 2025
+ERROR: could not create window
+
+Mon Feb 10 02:55:46 2025
+ERROR: could not initialize GLFW
+
