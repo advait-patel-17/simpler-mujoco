@@ -1,5 +1,6 @@
 import mujoco
 import mujoco.viewer
+import numpy as np
 from mujoco import MjData, MjModel
 # Loading a specific model description as an imported module.
 from robot_descriptions import aloha_mj_description
@@ -23,29 +24,39 @@ ds_filepath = "./data/episode_1.hdf5"
 file = h5py.File(ds_filepath, 'r')
 joint_actions = file["joint_action"]
 obs_joint_pos = file["/observations/full_joint_pos"]
+# obs_ee_pos = file["/observations/ee_pos"]
 timestamps = file["timestamp"]
-print(joint_actions[0])
+print(obs_joint_pos[0])
+
+data.qpos[:7] = obs_joint_pos[0][:7]
+mujoco.mj_step(model, data)
 
 dataset_len = len(joint_actions)
 count = 0
 
 start = time.time()
+score = 0
+
+start_err = obs_joint_pos[count][:7] - data.qpos[:7]
+print("start err:", start_err)
 
 with mujoco.viewer.launch_passive(model, data) as viewer:
     while viewer.is_running() and count < dataset_len:
+        error = obs_joint_pos[count][:7] - data.qpos[:7]
+        score += np.sum(np.abs(error))
+        print("error:", error)
+
         curr_sim_time = data.time
         data.ctrl[:7] = joint_actions[count]
         while data.time < curr_sim_time + TIMESTEP:
             mujoco.mj_step(model, data)
             viewer.sync()
-
-        error = obs_joint_pos[count][:7] - data.qpos[:7]
         count += 1
-
-        print("error:", error)
+    viewer.close()
 
 end = time.time()
 print("time elapsed:", end - start)
+print("score", score)
 """
 DIMENSIONS
 
