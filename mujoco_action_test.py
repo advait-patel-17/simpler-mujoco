@@ -3,18 +3,16 @@ import mujoco.viewer
 import numpy as np
 from mujoco import MjData, MjModel
 # Loading a specific model description as an imported module.
-from robot_descriptions import aloha_mj_description
 # model = mujoco.MjModel.from_xml_path(aloha_mj_description.MJCF_PATH)
 import time
 # # Directly loading an instance of MjModel.
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 import h5py
 # model = load_robot_description("panda_mj_description")
 
 # Loading a variant of the model, e.g. panda without a gripper.
 model = MjModel.from_xml_path("./aloha/robolab_setup.xml")
-data = mujoco.MjData(model)
+data = MjData(model)
 
 mujoco.mj_resetDataKeyframe(model, data, 0)
 

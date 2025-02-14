@@ -1,18 +1,9 @@
 import numpy as np
+import time
 
-def generate_neighbor_random(state):
-    """Generate neighbor by random perturbation"""
-    neighbor = state + np.random.uniform(-0.1, 0.1, size=state.shape)
-    return np.clip(neighbor, 0, 1)
 
-def generate_neighbor_normal(state):
-    """Generate neighbor using normal distribution"""
-    neighbor = state + np.random.normal(0, 0.1, size=state.shape)
-    return np.clip(neighbor, 0, 1)
-
-def simulated_annealing(initial_state, evaluate_fn, max_iterations=1000, 
-                       initial_temp=1.0, cooling_rate=0.95, 
-                       neighbor_type='random'):
+def simulated_annealing(initial_state, evaluate_fn, neighbor_fn, max_iterations=10000, 
+                       initial_temp=1.0, cooling_rate=0.995):
     """
     Simulated annealing optimization
     
@@ -26,11 +17,14 @@ def simulated_annealing(initial_state, evaluate_fn, max_iterations=1000,
     """
     
     # Set up initial state
-    current_state = initial_state.copy()
+    current_state = initial_state.copy()    # write "evaluate trajectory" fn (takes in kp/kd state and return error between simulated trajectory and ground truth)
+    # plug function into simulated_annealing fn
+
     current_energy = evaluate_fn(current_state)
     best_state = current_state.copy()
     best_energy = current_energy
     temperature = initial_temp
+
     
     # Select neighbor generation function
     if neighbor_type == 'random':
@@ -64,9 +58,9 @@ def simulated_annealing(initial_state, evaluate_fn, max_iterations=1000,
         
         # Cool temperature
         temperature *= cooling_rate
-        
         # Optional early stopping
         if temperature < 1e-10:
             break
+
     
     return best_state, best_energy, energy_history
