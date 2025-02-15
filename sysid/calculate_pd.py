@@ -12,7 +12,7 @@ from datetime import datetime
 
 
 TIMESTEP = 0.1
-
+ENERGY_SCALE = 0.01
 STIFFNESS_HIGH = np.array([600, 600, 600, 600, 600, 600, 4000])
 STIFFNESS_LOW = np.ones((7,))
 DAMPING_HIGH = np.array([200, 200, 200, 200, 200, 200, 200])
@@ -21,12 +21,9 @@ STIFFNESS_INIT = np.array([  43,   265,   227,    78,    37,    10.4, 2000 ])
 DAMPING_INIT = np.array([[ 5.76, 20,   18.49,  6.78,  6.28,  1.2,  40  ]])
 # note -> model.actuator_gainprm[i, 0] for stiffness, model.dof_damping[i] for damping
 
-np.random.randint()
-
 def loss(x, xp):
     err = np.linalg.norm(x - xp)
     return err
-
 
 def generate_uniform_parameters():
     # Generate random values between 0 and 1
@@ -41,53 +38,44 @@ def generate_uniform_parameters():
     result = np.vstack((stiffness, damping))
     return result
 
-def generate_gaussian_params():
+def generate_gaussian_params(current_state):
     """
-    Generate random parameters using truncated normal distribution.
+    Generate random parameters using truncated normal distribution centered around current state.
     
     Args:
-        stiffness_high: Upper bounds for stiffness
-        stiffness_low: Lower bounds for stiffness
-        damping_high: Upper bounds for damping
-        damping_low: Lower bounds for damping
-        mean_fraction: Fraction of range to use as mean (default 0.5 = middle)
-        std_fraction: Fraction of range to use as standard deviation (default 0.15)
+        current_state: Current parameter values, shape (2,7) where row 0 is stiffness, row 1 is damping
     
     Returns:
-        Tuple of (stiffness, damping) arrays
+        New parameter values with same shape as current_state
     """
-    stiffness_high =STIFFNESS_HIGH 
-    stiffness_low =STIFFNESS_LOW
-    damping_high= DAMPING_HIGH 
-    damping_low = DAMPING_LOW
-
-    mean_fraction=0.5
-    std_fraction=0.15
-
-    def truncated_normal(low, high):
-        mean = low + (high - low) * mean_fraction
+    std_fraction = 0.15  # Controls spread of distribution
+    
+    def truncated_normal(current_value, low, high):
+        # Use current value as mean
         std = (high - low) * std_fraction
         
         while True:
-            value = np.random.normal(mean, std)
+            value = np.random.normal(current_value, std)
             if low <= value <= high:
                 return value
     
-    # Generate stiffness parameters
+    # Split current state into stiffness and damping
+    current_stiffness = current_state[0]
+    current_damping = current_state[1]
+    
+    # Generate new stiffness parameters
     stiffness = np.array([
-        truncated_normal(low, high) 
-        for low, high in zip(stiffness_low, stiffness_high)
+        truncated_normal(current, low, high) 
+        for current, low, high in zip(current_stiffness, STIFFNESS_LOW, STIFFNESS_HIGH)
     ])
     
-    # Generate damping parameters
+    # Generate new damping parameters
     damping = np.array([
-        truncated_normal(low, high)
-        for low, high in zip(damping_low, damping_high)
+        truncated_normal(current, low, high)
+        for current, low, high in zip(current_damping, DAMPING_LOW, DAMPING_HIGH)
     ])
-    result = np.vstack((stiffness,damping))
-
-    return result
-
+    
+    return np.vstack((stiffness, damping))
 
 def log_annealing_results(best_state, best_energy, energy_history, output_dir="./logs"):
     """
@@ -175,35 +163,36 @@ def main():
 
     mujoco.mj_resetDataKeyframe(model, data, 0)
 
-    ds_filepath = "./data/episode_1.hdf5"
-    file = h5py.File(ds_filepath, 'r')
-    joint_actions = file["joint_action"]
-    obs_joint_pos = file["/observations/full_joint_pos"]
-    timestamps = file["timestamp"]
-
-    data.qpos[:7] = obs_joint_pos[0][:7]
-    mujoco.mj_step(model, data)
 
 
 
     def evaluate_trajectory(prms):
         score = 0
-        mujoco.mj_resetDataKeyframe(model, data, 0)
-        data.qpos[:7] = obs_joint_pos[0][:7]
-        model.actuator_gainprm[:7, 0] = prms[0]
-        model.dof_damping[:7] = prms[1]
-        mujoco.mj_step(model, data)
 
-        #write kp/kd values to thing
-        for i, act in enumerate(joint_actions):
-            err = loss(obs_joint_pos[i][:7], data.qpos[:7])
-            score += err
-            curr_sim_time = data.time
-            data.ctrl[:7] = act
-            while data.time < curr_sim_time + TIMESTEP:
-                mujoco.mj_step(model, data)
+        for filename in os.listdir('./data'):
+            ds_filepath = os.path.join('./data', filename)
+            file = h5py.File(ds_filepath, 'r')
+            joint_actions = file["joint_action"]
+            obs_joint_pos = file["/observations/full_joint_pos"]
+            timestamps = file["timestamp"]
 
-        return score
+
+            mujoco.mj_resetDataKeyframe(model, data, 0)
+            model.actuator_gainprm[:7, 0] = prms[0]
+            model.dof_damping[:7] = prms[1]
+
+            data.qpos[:7] = obs_joint_pos[0][:7]
+            mujoco.mj_step(model, data)
+
+            for i, act in enumerate(joint_actions):
+                err = loss(obs_joint_pos[i][:7], data.qpos[:7])
+                score += err
+                curr_sim_time = data.time
+                data.ctrl[:7] = act
+                while data.time < curr_sim_time + TIMESTEP:
+                    mujoco.mj_step(model, data)
+
+        return score*ENERGY_SCALE
     
     curr_stiffness = STIFFNESS_INIT
     curr_damping = DAMPING_INIT
