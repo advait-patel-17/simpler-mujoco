@@ -187,7 +187,8 @@ def main():
 
             data.qpos[:7] = obs_joint_pos[0][:7]
             mujoco.mj_step(model, data)
-            sim_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper')]
+            sim_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper_')]
+            print("site xpos:", data.site_xpos)
             print("observation_ee_pos:", obs_ee_pos[0])
             print("sim ee pos:", sim_ee_pos)
             print("diff:", obs_ee_pos[0][:3] - sim_ee_pos)
@@ -196,27 +197,28 @@ def main():
             print("joint diff:", loss(obs_joint_pos[0][:7], data.qpos[:7]))
 
 
-            for i, act in enumerate(joint_actions):
-                err = loss(obs_joint_pos[i][:7], data.qpos[:7])
-                score += err
-                curr_sim_time = data.time
-                data.ctrl[:7] = act
-                while data.time < curr_sim_time + TIMESTEP:
-                    mujoco.mj_step(model, data)
+            # for i, act in enumerate(joint_actions):
+            #     err = loss(obs_joint_pos[i][:7], data.qpos[:7])
+            #     score += err
+            #     curr_sim_time = data.time
+            #     data.ctrl[:7] = act
+            #     while data.time < curr_sim_time + TIMESTEP:
+            #         mujoco.mj_step(model, data)
 
         return score*ENERGY_SCALE
     
     curr_stiffness = STIFFNESS_INIT
     curr_damping = DAMPING_INIT
     curr_state = np.vstack([curr_stiffness, curr_damping])
+    evaluate_trajectory(curr_state)
 
-    best_state, best_energy, energy_history = simulated_annealing(initial_state=curr_state, evaluate_fn=evaluate_trajectory, neighbor_fn=generate_gaussian_params)
+    # best_state, best_energy, energy_history = simulated_annealing(initial_state=curr_state, evaluate_fn=evaluate_trajectory, neighbor_fn=generate_gaussian_params)
 
     # After simulated annealing
-    log_paths = log_annealing_results(best_state, best_energy, energy_history)
-    print(log_paths)
-    end = time.time()
-    print("time elapsed:", end - start)
+    # log_paths = log_annealing_results(best_state, best_energy, energy_history)
+    # print(log_paths)
+    # end = time.time()
+    # print("time elapsed:", end - start)
 
     
 if __name__ == "__main__":
