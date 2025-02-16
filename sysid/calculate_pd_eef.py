@@ -13,15 +13,10 @@ from datetime import datetime
 
 TIMESTEP = 0.1
 ENERGY_SCALE = 0.002
-# STIFFNESS_HIGH = np.array([600, 600, 600, 600, 600, 600, 4000])
-# STIFFNESS_LOW = np.ones((7,))
-# DAMPING_HIGH = np.array([200, 200, 200, 200, 200, 200, 200])
-# DAMPING_LOW = np.zeros((7,))
-STIFFNESS_HIGH = np.array([400, 400, 400, 400, 400, 400, 2500])
+STIFFNESS_HIGH = np.array([600, 600, 600, 600, 600, 600, 4000])
 STIFFNESS_LOW = np.ones((7,))
-DAMPING_HIGH = np.array([100, 100, 100, 100, 100, 100, 100])
+DAMPING_HIGH = np.array([200, 200, 200, 200, 200, 200, 200])
 DAMPING_LOW = np.zeros((7,))
-
 STIFFNESS_INIT = np.array([  43,   265,   227,    78,    37,    10.4, 2000 ])
 DAMPING_INIT = np.array([[ 5.76, 20,   18.49,  6.78,  6.28,  1.2,  40  ]])
 # note -> model.actuator_gainprm[i, 0] for stiffness, model.dof_damping[i] for damping
@@ -53,7 +48,7 @@ def generate_gaussian_params(current_state):
     Returns:
         New parameter values with same shape as current_state
     """
-    std_fraction = 0.1  # Controls spread of distribution
+    std_fraction = 0.15  # Controls spread of distribution
     
     def truncated_normal(current_value, low, high):
         # Use current value as mean
@@ -169,7 +164,9 @@ def main():
 
     mujoco.mj_resetDataKeyframe(model, data, 0)
 
-
+    def convert_pos(obs_ee_pos):
+        obs_ee_pos[:2] = -obs_ee_pos[:2].copy()
+        return obs_ee_pos
 
 
     def evaluate_trajectory(prms):
@@ -180,6 +177,7 @@ def main():
             file = h5py.File(ds_filepath, 'r')
             joint_actions = file["joint_action"]
             obs_joint_pos = file["/observations/full_joint_pos"]
+            obs_ee_pos = file["/observations/ee_pos"]
             timestamps = file["timestamp"]
 
 
@@ -189,6 +187,14 @@ def main():
 
             data.qpos[:7] = obs_joint_pos[0][:7]
             mujoco.mj_step(model, data)
+            sim_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper')]
+            print("observation_ee_pos:", obs_ee_pos[0])
+            print("sim ee pos:", sim_ee_pos)
+            print("diff:", obs_ee_pos[0][:3] - sim_ee_pos)
+            print("norm diff:", np.linalg.norm(obs_ee_pos[0][:3] - sim_ee_pos))
+
+            print("joint diff:", loss(obs_joint_pos[0][:7], data.qpos[:7]))
+
 
             for i, act in enumerate(joint_actions):
                 err = loss(obs_joint_pos[i][:7], data.qpos[:7])

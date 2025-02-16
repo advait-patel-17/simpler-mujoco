@@ -2,8 +2,8 @@ import numpy as np
 import time
 
 
-def simulated_annealing(initial_state, evaluate_fn, neighbor_fn, max_iterations=1000, 
-                       initial_temp=1.0, cooling_rate=0.995):
+def simulated_annealing(initial_state, evaluate_fn, neighbor_fn, max_iterations=2500, 
+                       initial_temp=1.0, cooling_rate=0.996):
     """
     Simulated annealing optimization
     
