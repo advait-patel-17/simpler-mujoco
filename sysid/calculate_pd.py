@@ -192,6 +192,9 @@ def main():
 
             for i, act in enumerate(joint_actions):
                 err = loss(obs_joint_pos[i][:7], data.qpos[:7])
+                # print("data qpos:", data.qpos[:7])
+                # print("Current observed joint position:", obs_joint_pos[i][:7])
+                # print("error:",err)
                 score += err
                 curr_sim_time = data.time
                 data.ctrl[:7] = act

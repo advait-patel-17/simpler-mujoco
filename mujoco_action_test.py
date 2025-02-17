@@ -22,7 +22,7 @@ ds_filepath = "./data/episode_1.hdf5"
 file = h5py.File(ds_filepath, 'r')
 joint_actions = file["joint_action"]
 obs_joint_pos = file["/observations/full_joint_pos"]
-# obs_ee_pos = file["/observations/ee_pos"]
+obs_ee_pos = file["/observations/ee_pos"]
 timestamps = file["timestamp"]
 print(obs_joint_pos[0])
 
@@ -43,7 +43,12 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
         error = obs_joint_pos[count][:7] - data.qpos[:7]
         score += np.sum(np.abs(error))
         print("error:", error)
-
+        print("score:", np.sum(np.abs(error)))
+        print("data qpos", data.qpos[:7])
+        print("ee pos:", obs_ee_pos[count])
+        sim_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper_')]
+        print("sim ee pos:", sim_ee_pos)
+        print("EE ERROR:", np.linalg.norm(sim_ee_pos - obs_ee_pos[count][:3]))
         curr_sim_time = data.time
         data.ctrl[:7] = joint_actions[count]
         while data.time < curr_sim_time + TIMESTEP:

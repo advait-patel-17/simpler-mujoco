@@ -185,7 +185,7 @@ def main():
             model.actuator_gainprm[:7, 0] = prms[0]
             model.dof_damping[:7] = prms[1]
 
-            data.qpos[:7] = obs_joint_pos[0][:7]
+            data.qpos[:8] = obs_joint_pos[0]
             mujoco.mj_step(model, data)
             sim_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper_')]
             print("site xpos:", data.site_xpos)
@@ -197,13 +197,13 @@ def main():
             print("joint diff:", loss(obs_joint_pos[0][:7], data.qpos[:7]))
 
 
-            # for i, act in enumerate(joint_actions):
-            #     err = loss(obs_joint_pos[i][:7], data.qpos[:7])
-            #     score += err
-            #     curr_sim_time = data.time
-            #     data.ctrl[:7] = act
-            #     while data.time < curr_sim_time + TIMESTEP:
-            #         mujoco.mj_step(model, data)
+            for i, act in enumerate(joint_actions):
+                err = loss(obs_joint_pos[i][:7], data.qpos[:7])
+                score += err
+                curr_sim_time = data.time
+                data.ctrl[:7] = act
+                while data.time < curr_sim_time + TIMESTEP:
+                    mujoco.mj_step(model, data)
 
         return score*ENERGY_SCALE
     
