@@ -18,7 +18,7 @@ mujoco.mj_resetDataKeyframe(model, data, 0)
 
 TIMESTEP = 0.1
 
-ds_filepath = "./data/episode_1.hdf5"
+ds_filepath = "./episode_0.hdf5"
 file = h5py.File(ds_filepath, 'r')
 joint_actions = file["joint_action"]
 obs_joint_pos = file["/observations/full_joint_pos"]
@@ -37,25 +37,61 @@ score = 0
 
 start_err = obs_joint_pos[count][:7] - data.qpos[:7]
 print("start err:", start_err)
-
+sim_curr_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper')]
+obs_curr_ee_pos = obs_joint_pos[count][:7]
+sim_last_ee_pos = sim_curr_ee_pos
+obs_last_ee_pos = obs_curr_ee_pos
+last_qpos = data.qpos[:7]
 with mujoco.viewer.launch_passive(model, data) as viewer:
     while viewer.is_running() and count < dataset_len:
         error = obs_joint_pos[count][:7] - data.qpos[:7]
         score += np.sum(np.abs(error))
-        print("error:", error)
-        print("score:", np.sum(np.abs(error)))
-        print("data qpos", data.qpos[:7])
-        print("ee pos:", obs_ee_pos[count])
-        sim_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper_')]
-        print("sim ee pos:", sim_ee_pos)
-        print("EE ERROR:", np.linalg.norm(sim_ee_pos - obs_ee_pos[count][:3]))
+        # print("error:", error)
+        # print("score:", np.sum(np.abs(error)))
+        # print("data qpos", data.qpos[:7])
+        # print("ee pos:", obs_ee_pos[count])
+        sim_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper')]
+        # print("sim ee pos:", sim_ee_pos)
+        # print("EE ERROR:", np.linalg.norm(sim_ee_pos - obs_ee_pos[count][:3]))
         curr_sim_time = data.time
         data.ctrl[:7] = joint_actions[count]
+        last_qpos = data.qpos[:7]
         while data.time < curr_sim_time + TIMESTEP:
             mujoco.mj_step(model, data)
+            
             viewer.sync()
+            sim_last_ee_pos = sim_curr_ee_pos.copy()
+            sim_curr_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper')].copy()
+            # print("error:", np.sum(np.abs(sim_curr_ee_pos - sim_last_ee_pos)))
+            if np.sum(np.abs(sim_curr_ee_pos - sim_last_ee_pos)) > 0.0025:
+                print("================== BIG SIM DIFF ====================")
+                print("sim last ee pos:", sim_last_ee_pos)
+                print("sim curr ee pos:", sim_curr_ee_pos)
+                print("diff:", np.sum(np.abs(sim_curr_ee_pos - sim_last_ee_pos)))
+                print("obs ee pos:", obs_ee_pos[count])
+                print("joint action", joint_actions[count])
+                print("count:", count)
+
+        obs_last_ee_pos = obs_curr_ee_pos
+        obs_curr_ee_pos = obs_joint_pos[count][:7]
+        if np.sum(np.abs(obs_curr_ee_pos[:3] - obs_last_ee_pos[:3])) > 0.2:
+            print("================== BIG OBS DIFF ====================")
+            print("obs last ee pos:", obs_last_ee_pos)
+            print("obs curr ee pos:", obs_curr_ee_pos)
+            print("diff:", np.sum(np.abs(obs_curr_ee_pos[:3] - obs_last_ee_pos[:3])))
+            print("count:", count)
+        if np.sum(np.abs(data.qpos[:7] - last_qpos[:7])) > 0.1:
+            print("================== BIG JOINT DIFF ====================")
+            print("last qpos:", last_qpos[:7])
+            print("sim joint pos:", data.qpos[:7])
+            print("diff:", np.sum(np.abs(data.qpos[:7] - obs_joint_pos[count][:7])))
+            print("count:", count)
         count += 1
     viewer.close()
+
+for i in range(130, 136):
+    print(f"joint action {i}:{ joint_actions[i]}")
+
 
 end = time.time()
 print("time elapsed:", end - start)
