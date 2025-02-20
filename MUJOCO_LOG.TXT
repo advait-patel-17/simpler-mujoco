@@ -31,3 +31,9 @@ ERROR: could not create window
 Mon Feb 10 02:55:46 2025
 ERROR: could not initialize GLFW
 
+Wed Feb 19 21:56:39 2025
+ERROR: could not initialize GLFW
+
+Wed Feb 19 22:02:15 2025
+ERROR: could not initialize GLFW
+
