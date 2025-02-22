@@ -11,7 +11,7 @@ mujoco.mj_resetDataKeyframe(model, data, 0)
 
 TIMESTEP = 0.1
 
-ds_filepath = "./data/episode_5.hdf5"
+ds_filepath = "./data/episode_1.hdf5"
 file = h5py.File(ds_filepath, 'r')
 joint_actions = file["joint_action"]
 obs_joint_pos = file["/observations/full_joint_pos"]
@@ -27,6 +27,11 @@ count = 0
 
 start = time.time()
 score = 0
+
+def get_ee_pos(model, data):
+    eepos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper')]
+    
+
 
 start_err = obs_joint_pos[count][:7] - data.qpos[:7]
 print("start err:", start_err)
