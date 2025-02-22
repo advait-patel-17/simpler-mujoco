@@ -11,7 +11,7 @@ mujoco.mj_resetDataKeyframe(model, data, 0)
 
 TIMESTEP = 0.1
 
-ds_filepath = "./data/episode_1.hdf5"
+ds_filepath = "./data/episode_0.hdf5"
 file = h5py.File(ds_filepath, 'r')
 joint_actions = file["joint_action"]
 obs_joint_pos = file["/observations/full_joint_pos"]

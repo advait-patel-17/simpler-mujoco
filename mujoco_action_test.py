@@ -18,13 +18,16 @@ mujoco.mj_resetDataKeyframe(model, data, 0)
 
 TIMESTEP = 0.1
 
-ds_filepath = "./episode_0.hdf5"
+ds_filepath = "./data/episode_0.hdf5"
 file = h5py.File(ds_filepath, 'r')
-joint_actions = file["joint_action"]
+joint_actions = np.array(file["joint_action"])
 obs_joint_pos = file["/observations/full_joint_pos"]
 obs_ee_pos = file["/observations/ee_pos"]
 timestamps = file["timestamp"]
 print(obs_joint_pos[0])
+
+joint_actions[131] = (joint_actions[133] - joint_actions[130])/3 + joint_actions[130]
+joint_actions[132] = 2*(joint_actions[133] - joint_actions[130])/3 + joint_actions[130]
 
 data.qpos[:7] = obs_joint_pos[0][:7]
 mujoco.mj_step(model, data)
@@ -42,6 +45,10 @@ obs_curr_ee_pos = obs_joint_pos[count][:7]
 sim_last_ee_pos = sim_curr_ee_pos
 obs_last_ee_pos = obs_curr_ee_pos
 last_qpos = data.qpos[:7]
+
+print("initial action:", joint_actions[0])
+print("initial pos:", data.qpos[:7])
+
 with mujoco.viewer.launch_passive(model, data) as viewer:
     while viewer.is_running() and count < dataset_len:
         error = obs_joint_pos[count][:7] - data.qpos[:7]
@@ -88,10 +95,6 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
             print("count:", count)
         count += 1
     viewer.close()
-
-for i in range(130, 136):
-    print(f"joint action {i}:{ joint_actions[i]}")
-
 
 end = time.time()
 print("time elapsed:", end - start)
