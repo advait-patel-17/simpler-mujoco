@@ -5,6 +5,7 @@ import mujoco
 import time
 from mujoco import MjModel, MjData
 import numpy as np
+from datetime import datetime
 
 TIMESTEP = 0.1
 ENERGY_SCALE = 0.002
@@ -36,7 +37,7 @@ def main():
             return err
 
         score = 0
-
+        L = 0
         for filename in os.listdir('./data'):
             ds_filepath = os.path.join('./data', filename)
             file = h5py.File(ds_filepath, 'r')
@@ -44,7 +45,7 @@ def main():
             obs_joint_pos = file["/observations/full_joint_pos"]
             timestamps = file["timestamp"]
 
-
+            L += len(joint_actions)
             mujoco.mj_resetDataKeyframe(model, data, 0)
             model.actuator_gainprm[:7, 0] = prms[0]
             model.dof_damping[:7] = prms[1]
@@ -63,4 +64,37 @@ def main():
                 while data.time < curr_sim_time + TIMESTEP:
                     mujoco.mj_step(model, data)
 
-        return score
+        return score / L
+    
+    curr_stiffness = STIFFNESS_INIT
+    curr_damping = DAMPING_INIT
+    curr_state = np.vstack([curr_stiffness, curr_damping])
+    lower_bound = np.vstack([STIFFNESS_LOW, DAMPING_LOW])
+    upper_bound =  np.vstack([DAMPING_LOW, DAMPING_HIGH])
+
+    cma = CMA(
+        initial_solution=curr_state,
+        initial_step_size=1.0,
+        fitness_function=evaluate_trajectory,
+        enforce_bounds=[lower_bound, upper_bound]
+    )
+    print("starting search")
+    best_solution, best_fitness = cma.search()
+    print("search done")
+    # Create timestamp for unique logging
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Create logs directory if it doesn't exist
+    os.makedirs("./logs", exist_ok=True)
+    
+    # Save results to txt file
+    log_path = os.path.join("./logs", f"cma_results_{timestamp}.txt")
+    with open(log_path, "w") as f:
+        f.write(f"CMA-ES Optimization Results\n")
+        f.write(f"Timestamp: {timestamp}\n\n")
+        f.write(f"Best Fitness Score: {best_fitness}\n\n")
+        f.write("Best Solution:\n")
+        f.write(f"Stiffness: {best_solution[0].tolist()}\n")
+        f.write(f"Damping: {best_solution[1].tolist()}\n")
+    
+    print(f"Results saved to: {log_path}")

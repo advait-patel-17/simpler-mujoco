@@ -26,8 +26,8 @@ obs_ee_pos = file["/observations/ee_pos"]
 timestamps = file["timestamp"]
 print(obs_joint_pos[0])
 
-joint_actions[131] = (joint_actions[133] - joint_actions[130])/3 + joint_actions[130]
-joint_actions[132] = 2*(joint_actions[133] - joint_actions[130])/3 + joint_actions[130]
+# joint_actions[131] = (joint_actions[133] - joint_actions[130])/3 + joint_actions[130]
+# joint_actions[132] = 2*(joint_actions[133] - joint_actions[130])/3 + joint_actions[130]
 
 data.qpos[:7] = obs_joint_pos[0][:7]
 mujoco.mj_step(model, data)
@@ -70,14 +70,14 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
             sim_last_ee_pos = sim_curr_ee_pos.copy()
             sim_curr_ee_pos = data.site_xpos[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper')].copy()
             # print("error:", np.sum(np.abs(sim_curr_ee_pos - sim_last_ee_pos)))
-            if np.sum(np.abs(sim_curr_ee_pos - sim_last_ee_pos)) > 0.0025:
-                print("================== BIG SIM DIFF ====================")
-                print("sim last ee pos:", sim_last_ee_pos)
-                print("sim curr ee pos:", sim_curr_ee_pos)
-                print("diff:", np.sum(np.abs(sim_curr_ee_pos - sim_last_ee_pos)))
-                print("obs ee pos:", obs_ee_pos[count])
-                print("joint action", joint_actions[count])
-                print("count:", count)
+            # if np.sum(np.abs(sim_curr_ee_pos - sim_last_ee_pos)) > 0.0025:
+            #     print("================== BIG SIM DIFF ====================")
+            #     print("sim last ee pos:", sim_last_ee_pos)
+            #     print("sim curr ee pos:", sim_curr_ee_pos)
+            #     print("diff:", np.sum(np.abs(sim_curr_ee_pos - sim_last_ee_pos)))
+            #     print("obs ee pos:", obs_ee_pos[count])
+            #     print("joint action", joint_actions[count])
+            #     print("count:", count)
 
         obs_last_ee_pos = obs_curr_ee_pos
         obs_curr_ee_pos = obs_joint_pos[count][:7]
@@ -93,6 +93,13 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
             print("sim joint pos:", data.qpos[:7])
             print("diff:", np.sum(np.abs(data.qpos[:7] - obs_joint_pos[count][:7])))
             print("count:", count)
+        if count > 1 and np.sum(np.abs(joint_actions[count] - joint_actions[count - 1])) > 0.5:
+            print("================== BIG ACTION DIFF ====================")
+            print("last action:", joint_actions[count - 1])
+            print("curr action:", joint_actions[count]) 
+            print("diff:", np.sum(np.abs(joint_actions[count] - joint_actions[count - 1])))
+            print("count:", count)
+
         count += 1
     viewer.close()
 
