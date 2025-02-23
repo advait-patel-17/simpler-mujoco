@@ -48,7 +48,7 @@ def evaluate_parallel(prms, model_path, file_paths):
 
 def simulated_annealing(initial_state, evaluate_fn, neighbor_fn, max_iterations=1000, 
                        initial_temp=1.0, cooling_rate=0.995, num_workers=None):
-    """
+    """ 
     Optimized simulated annealing implementation
     """
     if num_workers is None:
