@@ -78,10 +78,10 @@
     <geom mesh="tabletop" material="black" class="visual" pos="0 0 -0.75" quat="1 0 0 1"/>
     <geom mesh="tablelegs" material="table" class="visual" pos="0 0 -0.75" quat="1 0 0 1"/>
     <geom name="table" pos="0 0 -0.1009" size="0.61 0.37 0.1" type="box" class="collision"/>
-    <camera name="overhead_cam" focal="1.93e-3 1.93e-3" resolution="1280 720" sensorsize="3896e-6 2140e-6"
+    <!-- <camera name="overhead_cam" focal="1.93e-3 1.93e-3" resolution="1280 720" sensorsize="3896e-6 2140e-6"
             pos="0 -0.303794 1.02524" mode="fixed" quat="0.976332 0.216277 0 0"/>
     <camera name="worms_eye_cam" focal="1.93e-3 1.93e-3" resolution="1280 720" sensorsize="3896e-6 2140e-6"
-            pos="0 -0.377167 0.0316055" mode="fixed" quat="0.672659 0.739953 0 0"/>
+            pos="0 -0.377167 0.0316055" mode="fixed" quat="0.672659 0.739953 0 0"/> -->
     <!-- <geom class="frame" pos="0.44 -0.361 1.03" quat="0 1 0 1" mesh="extrusion_2040_880" /> -->
     <!-- <geom class="frame" pos="0.44 -0.371 0.61" quat="1 0 -1 0" mesh="extrusion_150" /> -->
     <!-- <geom class="frame" pos="0 -0.303794 1.02524" quat="0 0 0.976296 0.21644" mesh="d405_solid"/> -->
@@ -138,7 +138,7 @@
     <geom name="battery3" class="object_collision"  pos="0 0.05 0.02" mesh="battery" />
     <geom name="battery4" class="object_collision"  pos="0.05 0.05 0.02" mesh="battery" />
     <geom name="crate" class="object_collision"  pos="-0.1 0 0.02" mesh="crate" /> -->
-    <site name="origin_sphere" type="sphere" size="0.05" pos="0 0 0" rgba="0 1 0 1"/>
+    <!-- <site name="origin_sphere" type="sphere" size="0.05" pos="0 0 0" rgba="0 1 0 1"/> -->
 
 <!-- <site name="connection" 
       type="cylinder" 
@@ -150,6 +150,16 @@
 <!-- from left edge of block to left extrusion (inner) -> 0.135 m -->
 <!-- <site name="right_outer_tall" type="sphere" size="0.05" pos="0.6 -0.371 0.62" rgba="1 0 0 1" /> -->
 <!-- <site name="far_ref" type="sphere" size="0.05" pos="-0.61 0.369 0.01" /> -->
+
+    <!-- Added cameras from extrinsics -->
+    <camera name="cam_215122252880" pos="0.03061609342229516 0.06172927090931391 0.8049667078355867" mode="fixed" 
+           quat="0.11722229279620958 0.22280867907704902 0.9023621346167291 -0.34979680474452673"/>
+    <camera name="cam_215322078948" pos="-0.15599453690897988 -0.03477468313388598 0.7617104394425064" mode="fixed"
+           quat="-0.15016294637582311 -0.21159880460618116 0.8238747374262183 -0.503892302437581"/>
+    <camera name="cam_243522072650" pos="-0.12990516969611557 0.030423196712761016 0.6008845133390435" mode="fixed"
+           xyaxes="1 0 0 0 1 0"/>
+    <camera name="cam_311322303806" pos="-0.013976802064573336 -0.010744359057415331 0.6463779069297746" mode="fixed"
+           quat="0.28652411353725227 0.8998189301241318 -0.3167935300931136 0.08872251486008538"/>
 
 </worldbody>
 </mujoco>
