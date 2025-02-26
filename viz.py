@@ -10,6 +10,38 @@ data = mujoco.MjData(model)
 mujoco.mj_resetDataKeyframe(model, data, 0)
 
 mujoco.mj_step(model, data)
+
+base_idx = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'robot_right_base')
+
+print("robot base xpos:", data.site_xpos[base_idx])
+print("robot base xmat:", data.site_xmat[base_idx])
+ee_idx = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'right/gripper')
+print("end effector xpos:", data.site_xpos[ee_idx])
+print("end effector xmat:", data.site_xmat[ee_idx])
+
+# Transformation matrix from robot base to world frame
+T_base_world = np.array([
+    [-1.0,  0.0,  0.0,  0.525],
+    [ 0.0, -1.0,  0.0, -0.019],
+    [ 0.0,  0.0,  1.0,  0.02 ],
+    [ 0.0,  0.0,  0.0,  1.0  ]
+])
+
+# For reference:
+# robot base xpos: [ 0.525 -0.019  0.02 ]
+# robot base xmat: [-1.  0.  0.  0. -1.  0.  0.  0.  1.]
+# end effector xpos: [ 0.24353877 -0.019       0.32524417]
+# end effector xmat: [-0.99500417  0.          0.09983342  0.         -1.          0.
+#   0.09983342  0.          0.99500417]
+
+#ee pos in world coord
+ee_pos = np.array([0.24353877,  -0.019 , 0.32524417, 1])
+# ee pos in robot base
+ee_pos_rob = np.linalg.inv(T_base_world) @ ee_pos
+print("ee pos in robot:", ee_pos_rob)
+
+
+
 thing = np.zeros((model.nu,))
 for i in range(7):
     kp = model.actuator_gainprm[i, 0]

@@ -138,7 +138,6 @@
     <geom name="battery3" class="object_collision"  pos="0 0.05 0.02" mesh="battery" />
     <geom name="battery4" class="object_collision"  pos="0.05 0.05 0.02" mesh="battery" />
     <geom name="crate" class="object_collision"  pos="-0.1 0 0.02" mesh="crate" /> -->
-    <!-- <site name="origin_sphere" type="sphere" size="0.05" pos="0 0 0" rgba="0 1 0 1"/> -->
 
 <!-- <site name="connection" 
       type="cylinder" 
@@ -157,7 +156,7 @@
     <camera name="cam_215322078948" pos="-0.15599453690897988 -0.03477468313388598 0.7617104394425064" mode="fixed"
            quat="-0.15016294637582311 -0.21159880460618116 0.8238747374262183 -0.503892302437581"/>
     <camera name="cam_243522072650" pos="-0.12990516969611557 0.030423196712761016 0.6008845133390435" mode="fixed"
-           xyaxes="1 0 0 0 1 0"/>
+           quat="-0.006339441728533206 0.0008088437168284237 0.9999263174534538 -0.010320703192460078"/>
     <camera name="cam_311322303806" pos="-0.013976802064573336 -0.010744359057415331 0.6463779069297746" mode="fixed"
            quat="0.28652411353725227 0.8998189301241318 -0.3167935300931136 0.08872251486008538"/>
 
