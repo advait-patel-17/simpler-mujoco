@@ -1,73 +1,89 @@
-import struct
+import sqlite3
 import numpy as np
 
-def read_cameras_binary(path_to_model_file):
-    """
-    Read COLMAP camera binary file.
-    """
+def get_intrinsics_from_colmap_db(db_path):
+    """Extract camera parameters from COLMAP database file."""
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+    
+    cursor.execute("SELECT camera_id, model, params, width, height FROM cameras;")
     cameras = {}
-    with open(path_to_model_file, "rb") as fid:
-        num_cameras = struct.unpack('<Q', fid.read(8))[0]
-        for _ in range(num_cameras):
-            camera_id = struct.unpack('<i', fid.read(4))[0]
-            model_id = struct.unpack('<i', fid.read(4))[0]
-            width = struct.unpack('<Q', fid.read(8))[0]
-            height = struct.unpack('<Q', fid.read(8))[0]
-            
-            # The number of parameters depends on the camera model
-            num_params = struct.unpack('<i', fid.read(4))[0]
-            params = struct.unpack('<' + 'd' * num_params, fid.read(8 * num_params))
-            
-            cameras[camera_id] = {
-                'model_id': model_id,
-                'width': width,
-                'height': height,
-                'params': params
-            }
-            
-            # Map common model IDs to their names
-            model_name = {
-                0: "SIMPLE_PINHOLE",
-                1: "PINHOLE",
-                2: "SIMPLE_RADIAL",
-                3: "RADIAL",
-                4: "OPENCV",
-                5: "OPENCV_FISHEYE",
-                6: "FULL_OPENCV",
-                7: "FOV",
-                8: "SIMPLE_RADIAL_FISHEYE",
-                9: "RADIAL_FISHEYE",
-                10: "THIN_PRISM_FISHEYE"
-            }.get(model_id, f"Unknown model {model_id}")
-            
-            cameras[camera_id]['model_name'] = model_name
-            
+    
+    for row in cursor:
+        camera_id, model, params, width, height = row
+        
+        # Parse the parameters blob
+        params = np.frombuffer(params, dtype=np.float64)
+        
+        # Map model ID to name
+        model_name = {
+            0: "SIMPLE_PINHOLE",
+            1: "PINHOLE",
+            2: "SIMPLE_RADIAL",
+            3: "RADIAL",
+            4: "OPENCV",
+            5: "OPENCV_FISHEYE",
+            6: "FULL_OPENCV",
+            7: "FOV",
+            8: "SIMPLE_RADIAL_FISHEYE",
+            9: "RADIAL_FISHEYE",
+            10: "THIN_PRISM_FISHEYE"
+        }.get(model, f"Unknown model {model}")
+        
+        cameras[camera_id] = {
+            'model_id': model,
+            'model_name': model_name,
+            'width': width,
+            'height': height,
+            'params': params
+        }
+        
+        print(f"Camera {camera_id} ({model_name}): {width}x{height}")
+        print(f"All parameters: {params}")
+        
+        # For OPENCV model
+        if model_name == "OPENCV":
+            # Parameters are: fx, fy, cx, cy, k1, k2, p1, p2
+            if len(params) >= 8:
+                fx, fy, cx, cy = params[0], params[1], params[2], params[3]
+                k1, k2, p1, p2 = params[4], params[5], params[6], params[7]
+                
+                # Create intrinsic matrix
+                K = np.array([
+                    [fx, 0, cx],
+                    [0, fy, cy],
+                    [0, 0, 1]
+                ])
+                
+                print("Intrinsic Matrix K:")
+                print(K)
+                print("\nDistortion Parameters:")
+                print(f"Radial: k1={k1}, k2={k2}")
+                print(f"Tangential: p1={p1}, p2={p2}")
+                
+                # Print in format for common computer vision libraries
+                print("\nOpenCV format:")
+                print(f"K = np.array([")
+                print(f"    [{fx}, 0, {cx}],")
+                print(f"    [0, {fy}, {cy}],")
+                print(f"    [0, 0, 1]")
+                print(f"])")
+                print(f"dist_coeffs = np.array([{k1}, {k2}, {p1}, {p2}, 0])")
+                
+                # For 3D Gaussian Splatting
+                print("\nFor 3D Gaussian Splatting (if needed):")
+                print(f"fx: {fx}")
+                print(f"fy: {fy}")
+                print(f"cx: {cx}")
+                print(f"cy: {cy}")
+                print(f"width: {width}")
+                print(f"height: {height}")
+            else:
+                print("Warning: Not enough parameters for OPENCV model!")
+        
+    connection.close()
     return cameras
 
-# Example usage
-cameras = read_cameras_binary("path/to/cameras.bin")
-
-# Print camera info and intrinsics
-for camera_id, camera in cameras.items():
-    print(f"Camera ID: {camera_id}")
-    print(f"Camera Model: {camera['model_name']}")
-    print(f"Width: {camera['width']}, Height: {camera['height']}")
-    print(f"Parameters: {camera['params']}")
-    
-    # Extract intrinsics based on the camera model
-    if camera['model_name'] == "SIMPLE_PINHOLE":
-        # f, cx, cy
-        f, cx, cy = camera['params']
-        K = np.array([[f, 0, cx],
-                      [0, f, cy],
-                      [0, 0, 1]])
-        print("Intrinsic Matrix K:")
-        print(K)
-    elif camera['model_name'] == "PINHOLE":
-        # fx, fy, cx, cy
-        fx, fy, cx, cy = camera['params']
-        K = np.array([[fx, 0, cx],
-                      [0, fy, cy],
-                      [0, 0, 1]])
-        print("Intrinsic Matrix K:")
-        print(K)
+# Path to your COLMAP database
+db_path = "/home/shivansh/Projects/3dgs/outputs/setup_cam_cali/colmap/database.db"
+cameras = get_intrinsics_from_colmap_db(db_path)

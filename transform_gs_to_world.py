@@ -13,9 +13,14 @@ def calibrate_extrinsics(visualize=True, board_size=(6,9), squareLength=0.03, ma
         markerLength=markerLength,
         dictionary=dictionary,
     )
-    
-    intrinsic_matrix = self.get_intrinsics()
-    dist_coef = self.get_dist_coeff()
+    # TODO get intrinsics
+    K = np.array([
+    [1536.0, 0, 640.0],
+    [0, 1536.0, 360.0],
+    [0, 0, 1]
+    ])
+    dist_coef = np.array([0.0, 0.0, 0.0, 0.0, 0])
+    intrinsic_matrix = K
     
     R_gripper2base = []
     t_gripper2base = []
@@ -32,8 +37,9 @@ def calibrate_extrinsics(visualize=True, board_size=(6,9), squareLength=0.03, ma
     # # points, colors, depth_img, mask = self.camera.get_observations()
     # colors = out['color']
     # calibration_img = colors.copy()
+    # TODO: get the calibration image
     calibration_img = 
-    cv2.imshow(f"calibration_img_{self.serial_number}", calibration_img)
+    cv2.imshow(f"calibration_img_{serial_number}", calibration_img)
     cv2.waitKey(1)
     # import pdb
     # pdb.set_trace()
