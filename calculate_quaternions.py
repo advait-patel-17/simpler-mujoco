@@ -9,12 +9,6 @@ def transform_camera_params(matrix):
     #     [-1, 0, 0],
     #     [0, 0, 1]
     # ])
-    test_1 = np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 1],
-        [0, 0, 0, 1]
-    ])
 
     rot_1 = np.array([
         [0, -1, 0, -0.2],
@@ -62,6 +56,8 @@ def process_extrinsics():
         try:
             data = np.load(file_path)
             # not having the inverse clumps all the cameras together in the center for some reason
+            # ok so here's why we need inverse - camera extrinsics are the transformation from camera to world
+            # but we need the transformation from world to camera
             data = np.linalg.inv(data)
             position, quat = transform_camera_params(data)
             print(f'    <camera name="cam_{file_name[:-4]}" pos="{position[0]} {position[1]} {position[2]}" ')
