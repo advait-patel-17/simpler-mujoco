@@ -21,7 +21,7 @@ def calibrate_extrinsics(visualize=True, board_size=(6,9), squareLength=0.03, ma
     ])
     dist_coef = np.array([0.0, 0.0, 0.0, 0.0, 0])
     intrinsic_matrix = K
-    
+
     R_gripper2base = []
     t_gripper2base = []
     R_board2cam = []
@@ -38,15 +38,16 @@ def calibrate_extrinsics(visualize=True, board_size=(6,9), squareLength=0.03, ma
     # colors = out['color']
     # calibration_img = colors.copy()
     # TODO: get the calibration image
-    calibration_img = 
-    cv2.imshow(f"calibration_img_{serial_number}", calibration_img)
+    img_path = "/home/shivansh/Projects/3dgs/outputs/setup_cam_cali/images/frame_00112.png"
+    calibration_img = cv2.imread(img_path)
+    cv2.imshow(f"calibration_img", calibration_img)
     cv2.waitKey(1)
     # import pdb
     # pdb.set_trace()
-    corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
-        image=calibration_img,
-        dictionary=dictionary,
-        parameters=None,
+    corners, ids, rejected = cv2.aruco.detectMarkers(
+        calibration_img, 
+        cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250),
+        parameters=cv2.aruco.DetectorParameters_create()
     )
     if len(corners) == 0:
         warnings.warn('no markers detected')
@@ -141,5 +142,9 @@ def calibrate_extrinsics(visualize=True, board_size=(6,9), squareLength=0.03, ma
     # #make tf as list
     # tf = tf.tolist()
     # print("tf: ", tf)
-    
-    np.save(os.path.join(self.extrinsics_dir, f'{self.serial_number}.npy'), tf)
+    print("tf: ", tf)
+    # Save the transformation matrix to the current working directory
+    np.save('camera_extrinsics.npy', tf)
+    print(f"Saved transformation matrix to {os.path.join(os.getcwd(), 'camera_extrinsics.npy')}")
+
+calibrate_extrinsics()
