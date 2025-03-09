@@ -46,8 +46,8 @@ def calibrate_extrinsics(visualize=True, board_size=(6,9), squareLength=0.03, ma
     # pdb.set_trace()
     corners, ids, rejected = cv2.aruco.detectMarkers(
         calibration_img, 
-        cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250),
-        parameters=cv2.aruco.DetectorParameters_create()
+        dictionary,
+        parameters=cv2.aruco.DetectorParameters()
     )
     if len(corners) == 0:
         warnings.warn('no markers detected')
@@ -81,7 +81,7 @@ def calibrate_extrinsics(visualize=True, board_size=(6,9), squareLength=0.03, ma
             charucoCorners=charuco_corners,
             charucoIds=charuco_ids,
         )
-        cv2.imshow(f"calibration_{self.serial_number}", calibration_img)
+        cv2.imshow(f"calibration", calibration_img)
         cv2.waitKey(1)
 
     rvec = None
